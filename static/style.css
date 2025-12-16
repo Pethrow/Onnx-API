@@ -1,0 +1,397 @@
+:root {
+    /* Dark Theme (Professional/Matte) */
+    --bg-color: #0d1117;
+    /* GitHub Dark Dimmed style */
+    --sidebar-bg: #161b22;
+    --card-bg: #161b22;
+
+    --text-primary: #f0f6fc;
+    --text-secondary: #8b949e;
+
+    --accent: #FFD21E;
+    --accent-hover: #eac545;
+
+    --border: #30363d;
+    --success: #238636;
+    --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    /* System font is minimal */
+}
+
+[data-theme="light"] {
+    /* Light Theme (Clean/Minimal) */
+    --bg-color: #ffffff;
+    --sidebar-bg: #f6f8fa;
+    --card-bg: #ffffff;
+
+    --text-primary: #24292f;
+    --text-secondary: #57606a;
+
+    --accent: #FFD21E;
+    --accent-hover: #eac545;
+
+    --border: #d0d7de;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    /* Remove fancy gradients */
+
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    height: 100vh;
+    overflow: hidden;
+    transition: color 0.3s ease;
+}
+
+/* Professional Engineering Look - Reduced Blur/Glass */
+.card,
+.model-settings-card,
+.output-area {
+    background-color: var(--card-bg);
+    /* Now more solid */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    /* Subtle, realistic shadow */
+    border: 1px solid var(--border);
+    /* Removed backdrop-filter to reduce "vibe" look */
+}
+
+[data-theme="light"] .card,
+[data-theme="light"] .model-settings-card,
+[data-theme="light"] .output-area {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .card,
+[data-theme="light"] .model-settings-card,
+[data-theme="light"] .sidebar,
+[data-theme="light"] .output-area {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Layout */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Top Navigation Bar */
+.top-nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+}
+
+.logo-area h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+.logo-area span {
+    color: var(--accent);
+}
+
+/* Single Page Layout - All Sections Visible */
+.tab-content {
+    display: block;
+    margin-bottom: 60px;
+    /* Spacing between sections */
+    border-bottom: 1px solid var(--border);
+    /* Visual separator */
+    padding-bottom: 60px;
+}
+
+.tab-content:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+/* No animation needed as they are always there */
+
+/* Floating Tab Pill */
+.floating-tabs {
+    display: flex;
+    gap: 8px;
+    /* Removed pill styles */
+}
+
+.nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 100px;
+    /* Pill shape buttons */
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background-color: rgba(125, 125, 125, 0.1);
+    color: var(--text-primary);
+}
+
+.nav-btn.active {
+    background-color: var(--accent);
+    color: #0b0f19;
+    /* High contrast text for active tab regardless of theme */
+    box-shadow: 0 2px 10px rgba(255, 210, 30, 0.3);
+}
+
+/* Controls Area */
+.controls-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background-color: rgba(125, 125, 125, 0.1);
+    color: var(--text-primary);
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--success);
+    background: rgba(34, 197, 94, 0.1);
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+/* Content Area */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Page Headers */
+header {
+    margin-bottom: 24px;
+}
+
+header h2 {
+    font-size: 28px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+header p {
+    font-size: 14px;
+}
+
+
+/* Unified Card Style */
+.card,
+.model-settings-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    backdrop-filter: var(--backdrop);
+    -webkit-backdrop-filter: var(--backdrop);
+    border-radius: 12px;
+    padding: 24px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dashboard Grid */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.card h3 {
+    font-size: 18px;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.card p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    font-size: 24px;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* Settings Form */
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    background: var(--bg-color);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: inherit;
+}
+
+.form-group input:focus {
+    outline: 1px solid var(--accent);
+    border-color: var(--accent);
+}
+
+.primary-btn {
+    background-color: var(--accent);
+    color: #0b0f19;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.primary-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Test Console */
+.console-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 20px;
+    height: calc(100vh - 200px);
+}
+
+.input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(0, 0, 0, 0.01);
+}
+
+.drop-zone:hover {
+    border-color: var(--accent);
+    background: rgba(125, 125, 125, 0.05);
+}
+
+.input-group select {
+    width: 100%;
+    padding: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: inherit;
+}
+
+.output-area {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow: hidden;
+}
+
+.preview-container {
+    flex: 1;
+    background: var(--bg-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.preview-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.tags-output {
+    height: 150px;
+    overflow-y: auto;
+}
+
+.tags-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.tag-chip {
+    background: rgba(255, 210, 30, 0.15);
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 14px;
+}
+
+.placeholder {
+    color: var(--text-secondary);
+    font-style: italic;
+}

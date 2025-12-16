@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onnx API</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="top-nav-container">
+            <div class="logo-area">
+                <h1>Onnx<span>API</span></h1>
+            </div>
+
+            <!-- Navigation removed for single-page layout -->
+            <div class="controls-area">
+                <button class="icon-btn" id="theme-toggle" title="Switch Theme">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <path
+                            d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+                    </svg>
+                </button>
+                <div class="status-badge">
+                    <span class="dot"></span> <span>Online</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <!-- Dashboard Tab -->
+            <section id="dashboard" class="tab-content active">
+                <header>
+                    <h2>Dashboard</h2>
+                    <p>Overview of active models and system status.</p>
+                </header>
+                <div class="cards-grid" id="model-cards">
+                    <!-- Cards will be injected here by JS -->
+                </div>
+            </section>
+
+            <!-- Settings Tab -->
+            <section id="settings" class="tab-content">
+                <header>
+                    <h2>Settings</h2>
+                    <p>Configure model parameters in real-time.</p>
+                </header>
+                <div class="settings-container" id="settings-forms">
+                    <!-- Forms will be injected here by JS -->
+                </div>
+            </section>
+
+            <!-- Test Console Tab -->
+            <section id="console" class="tab-content">
+                <header>
+                    <h2>Test Console</h2>
+                    <p>Run inference on images to verify tags.</p>
+                </header>
+                <div class="console-layout">
+                    <div class="input-area">
+                        <div class="drop-zone" id="drop-zone">
+                            <p>Drag & Drop Image or Click to Upload</p>
+                            <input type="file" id="file-input" accept="image/*" hidden>
+                        </div>
+                        <div class="input-group">
+                            <label>Model</label>
+                            <select id="console-model-select">
+                                <!-- Options injected by JS -->
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Protocol</label>
+                            <select id="console-protocol-select">
+                                <option value="openai">OpenAI (Chat)</option>
+                                <option value="ollama">Ollama (Generate)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Prompt (Optional)</label>
+                            <input type="text" id="console-prompt-input" placeholder="Describe this image"
+                                value="Describe this image">
+                        </div>
+                        <button id="run-inference-btn" class="primary-btn">Run Inference</button>
+                    </div>
+                    <div class="output-area">
+                        <div class="preview-container">
+                            <img id="image-preview" src="" alt="Preview" hidden>
+                        </div>
+                        <div class="tags-output">
+                            <h3>Tags</h3>
+                            <div id="tags-result" class="tags-cloud">
+                                <span class="placeholder">Run inference to see tags...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+
+</html>

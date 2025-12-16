@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+config.json
+
+# Models
+*.onnx
+*.safetensors
+*.msgpack
+*.bin
+*.pth
+*.tflite
+
+# Model Directories
+models/
+model_sw/
