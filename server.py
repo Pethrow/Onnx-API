@@ -43,8 +43,8 @@ except ImportError:
 JOYTAG_REPO = "fancyfeast/joytag"
 SMILINGWOLF_REPO = "SmilingWolf/wd-eva02-large-tagger-v3"
 SMILINGWOLF_NAME = "wd-eva02-large-tagger-v3"
-CONVNEXT_REPO = "SmilingWolf/wd-convnext-tagger-v3"
-CONVNEXT_NAME = "wd-convnext-tagger-v3"
+VIT_REPO = "SmilingWolf/wd-vit-large-tagger-v3"
+VIT_NAME = "wd-vit-large-tagger-v3"
 
 # Global variables
 current_model_name = "joytag"
@@ -81,9 +81,9 @@ async def lifespan(app: FastAPI):
         models[SMILINGWOLF_NAME] = SmilingWolfWrapper(device, threshold, SMILINGWOLF_REPO, SMILINGWOLF_NAME)
         logger.info(f"{SMILINGWOLF_NAME} loaded.")
         
-        logger.info(f"Loading {CONVNEXT_NAME}...")
-        models[CONVNEXT_NAME] = SmilingWolfWrapper(device, threshold, CONVNEXT_REPO, CONVNEXT_NAME)
-        logger.info(f"{CONVNEXT_NAME} loaded.")
+        logger.info(f"Loading {VIT_NAME}...")
+        models[VIT_NAME] = SmilingWolfWrapper(device, threshold, VIT_REPO, VIT_NAME)
+        logger.info(f"{VIT_NAME} loaded.")
     except Exception as e:
         logger.error(f"Failed to load SmilingWolf models: {e}")
         # Non-fatal if at least one model loads, but we warned.
@@ -183,7 +183,7 @@ class SmilingWolfWrapper(ModelWrapper):
         img = np.expand_dims(img, 0)
         return img
 
-    def predict(self, image: Image.Image, prompt: str = None):
+    def predict(self, image: Image.Image, prompt: str = None, threshold: float = None, character_threshold: float = None):
         if not self.session: return "Model not loaded"
         
         img_input = self.prepare_image(image)
@@ -192,26 +192,14 @@ class SmilingWolfWrapper(ModelWrapper):
         input_name = self.session.get_inputs()[0].name
         output_name = self.session.get_outputs()[0].name
         
-        # Preprocessing if model expects certain format (e.g. NCHW vs NHWC)
-        # WD taggers generally expect NHWC (1, H, W, 3) or NCHW
-        # Let's inspect shape
-        input_shape = self.session.get_inputs()[0].shape
-        
-        # If NCHW (1, 3, 448, 448)
-        if len(input_shape) == 4 and input_shape[1] == 3:
-             img_input = img_input.transpose(0, 3, 1, 2)
-        
         probs = self.session.run([output_name], {input_name: img_input})[0]
         
-        # probs shape (1, num_tags)
-        
-        # NEW: Filter with category-specific thresholds
-        # Usually category 0 = General, 4 = Character (in Danbooru based models)
-        # SmilingWolf models usually have 'category' column in selected_tags.csv
-        
         final_tags = []
-        
         has_category = 'category' in self.tags_df.columns
+        
+        # Use provided threshold or default to instance threshold
+        base_threshold = threshold if threshold is not None else self.threshold
+        base_char_threshold = character_threshold if character_threshold is not None else self.character_threshold
         
         for i, prob in enumerate(probs[0]):
              if i >= len(self.tags_df): break
@@ -221,17 +209,16 @@ class SmilingWolfWrapper(ModelWrapper):
              tag_name = row['name']
              category = row['category'] if has_category else 0
              
-             # Determine active threshold
-             active_thresh = self.threshold
-             if category == 4: # Character
-                 active_thresh = self.character_threshold
+             active_thresh = base_threshold
+             if category == 4: 
+                 active_thresh = base_char_threshold
             
              if score > active_thresh:
                  final_tags.append((tag_name, score))
                  
         # Sort by score descending
         final_tags.sort(key=lambda x: x[1], reverse=True)
-        return ', '.join([t[0] for t in final_tags])
+        return final_tags
 
     def get_config(self):
         return {
@@ -298,7 +285,7 @@ class JoyTagWrapper(ModelWrapper):
         return image_tensor
 
     @torch.no_grad()
-    def predict(self, image: Image.Image, prompt: str = None):
+    def predict(self, image: Image.Image, prompt: str = None, threshold: float = None, character_threshold: float = None):
         image_tensor = self.prepare_image(image, self.model.image_size)
         batch = {'image': image_tensor.unsqueeze(0).to(self.device)}
 
@@ -306,11 +293,14 @@ class JoyTagWrapper(ModelWrapper):
             preds = self.model(batch)
             tag_preds = preds['tags'].sigmoid().cpu()
         
+        active_thresh = threshold if threshold is not None else self.threshold
+
         scores = {self.top_tags[i]: tag_preds[0][i] for i in range(len(self.top_tags))}
-        predicted_tags = [tag for tag, score in scores.items() if score > self.threshold]
+        predicted_tags = [tag for tag, score in scores.items() if score > active_thresh]
         # Sort by score descending
         predicted_tags.sort(key=lambda x: scores[x], reverse=True)
-        return ', '.join(predicted_tags)
+        # Return list of (tag, score)
+        return [(tag, float(scores[tag])) for tag in predicted_tags]
 
 class MessageContent(BaseModel):
     type: str
@@ -493,7 +483,12 @@ async def chat_completions(request: ChatCompletionRequest):
             "choices": [{"index": 0, "message": {"role": "assistant", "content": "No image found."}}],
         }
 
-    tag_string = models[requested_model].predict(image, prompt=prompt_text)
+    prediction_result = models[requested_model].predict(image, prompt=prompt_text)
+    # Check if prediction_result is list (new format) or str (just in case)
+    if isinstance(prediction_result, list):
+        tag_string = ', '.join([t[0] for t in prediction_result])
+    else:
+        tag_string = str(prediction_result)
 
     return {
         "id": "chatcmpl-joytag",
@@ -568,7 +563,11 @@ async def ollama_generate(request: OllamaGenerateRequest):
         raise HTTPException(status_code=400, detail="No image provided")
 
     # Use prompt from request or default
-    tag_string = models[requested_model].predict(image, prompt=request.prompt or "Describe this image.")
+    prediction_result = models[requested_model].predict(image, prompt=request.prompt or "Describe this image.")
+    if isinstance(prediction_result, list):
+         tag_string = ', '.join([t[0] for t in prediction_result])
+    else:
+         tag_string = str(prediction_result)
     
     return {
         "model": requested_model,
@@ -693,7 +692,11 @@ async def ollama_chat(request: OllamaChatRequest):
             "done": True
         }
 
-    tag_string = models[requested_model].predict(image)
+    prediction_result = models[requested_model].predict(image)
+    if isinstance(prediction_result, list):
+         tag_string = ', '.join([t[0] for t in prediction_result])
+    else:
+         tag_string = str(prediction_result)
 
     return {
         "model": requested_model,
@@ -739,6 +742,38 @@ async def update_config(model_name: str, config: ConfigUpdate):
     save_config_file(current_saved_config)
 
     return {"status": "updated", "config": models[model_name].get_config()}
+
+class InterrogateRequest(BaseModel):
+    model: str
+    image: str # Base64
+    threshold: Optional[float] = None
+    character_threshold: Optional[float] = None
+
+@app.post("/api/interrogate")
+async def interrogate(request: InterrogateRequest):
+    requested_model = request.model
+    if requested_model not in models:
+        # Fallback
+        if "joytag" in models:
+             requested_model = "joytag"
+        else:
+             raise HTTPException(status_code=404, detail="Model not found")
+    
+    image = decode_base64_image(request.image)
+    
+    
+    predictions = models[requested_model].predict(image, threshold=request.threshold, character_threshold=request.character_threshold)
+    
+    if isinstance(predictions, str):
+        raise HTTPException(status_code=500, detail=predictions)
+    
+    # Convert to JSON friendly
+    tags_out = [{"name": t[0], "score": t[1]} for t in predictions]
+    
+    return {
+        "model": requested_model,
+        "tags": tags_out
+    }
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 

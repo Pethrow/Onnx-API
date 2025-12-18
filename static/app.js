@@ -1,7 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Navigation (Tabs Removed for Single Page)
-
-
     // Theme Toggle
     const themeToggleBtn = document.getElementById('theme-toggle');
 
@@ -9,18 +6,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.body.setAttribute('data-theme', savedTheme);
 
-    themeToggleBtn.addEventListener('click', () => {
-        const currentTheme = document.body.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-        document.body.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-    });
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    }
 
     // App State
     const state = {
         models: {} // { modelName: config }
     };
+
+    // --- Tab Navigation ---
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.tab-content');
+
+    navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-tab');
+
+            // Update Buttons
+            navBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update Sections
+            sections.forEach(sec => {
+                if (sec.id === target) {
+                    sec.classList.add('active');
+                } else {
+                    sec.classList.remove('active');
+                }
+            });
+        });
+    });
 
     // --- API Interaction ---
     async function fetchConfig() {
@@ -63,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const consoleSelect = document.getElementById('console-model-select');
 
     function renderDashboard() {
+        if (!dashboardGrid) return;
         dashboardGrid.innerHTML = '';
         Object.keys(state.models).forEach(name => {
             const card = document.createElement('div');
@@ -77,17 +100,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderSettings() {
+        if (!settingsContainer) return;
         settingsContainer.innerHTML = '';
         Object.keys(state.models).forEach(name => {
             const config = state.models[name];
-
             const card = document.createElement('div');
             card.className = 'model-settings-card';
 
-            // Build form dynamically based on config keys
             let formHtml = `<h3>${name} Configuration</h3>`;
 
-            // Currently only threshold is supported, but loop allows future expansion
             if ('threshold' in config) {
                 formHtml += `
                     <div class="form-group">
@@ -112,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateConsoleOptions() {
+        if (!consoleSelect) return;
         consoleSelect.innerHTML = '';
         Object.keys(state.models).forEach(name => {
             const opt = document.createElement('option');
@@ -121,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Expose save function globally for inline onclick
     window.saveConfig = (modelName) => {
         const thresholdInput = document.getElementById(`input-${modelName}-threshold`);
         const charThresholdInput = document.getElementById(`input-${modelName}-char-threshold`);
@@ -139,22 +160,87 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Test Console Logic ---
+    // --- Tagger App Logic ---
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
     const preview = document.getElementById('image-preview');
+    const uploadPrompt = document.getElementById('upload-prompt');
+    const clearBtn = document.getElementById('clear-image-btn');
     const tagsResult = document.getElementById('tags-result');
+    const tagCountSpan = document.getElementById('tag-count');
+    const thresholdSlider = document.getElementById('threshold-slider');
+    const thresholdDisplay = document.getElementById('threshold-val-display');
+    const charThresholdSlider = document.getElementById('char-threshold-slider');
+    const charThresholdDisplay = document.getElementById('char-threshold-val-display');
+
+    if (thresholdSlider && thresholdDisplay) {
+        thresholdSlider.addEventListener('input', (e) => {
+            thresholdDisplay.innerText = parseFloat(e.target.value).toFixed(2);
+        });
+    }
+
+    if (charThresholdSlider && charThresholdDisplay) {
+        charThresholdSlider.addEventListener('input', (e) => {
+            charThresholdDisplay.innerText = parseFloat(e.target.value).toFixed(2);
+        });
+    }
+
     let currentFile = null;
 
-    dropZone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+    if (dropZone) {
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT' && !e.target.closest('#clear-image-btn')) {
+                fileInput.click();
+            }
+        });
 
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
-    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--border)'; });
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = 'var(--border)';
-        handleFile(e.dataTransfer.files[0]);
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('active');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+            handleFile(e.dataTransfer.files[0]);
+        });
+    }
+
+    // Clear Button Logic
+    if (clearBtn) {
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Stop bubble to dropZone
+
+            // Reset State
+            currentFile = null;
+            preview.src = '';
+            preview.hidden = true;
+            clearBtn.hidden = true;
+            if (uploadPrompt) uploadPrompt.hidden = false;
+            // Reset input so same file can be selected again
+            if (fileInput) fileInput.value = '';
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+    }
+
+    // Paste Support
+    document.addEventListener('paste', (e) => {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                handleFile(blob);
+                break;
+            }
+        }
     });
 
     function handleFile(file) {
@@ -165,102 +251,198 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = (e) => {
             preview.src = e.target.result;
             preview.hidden = false;
+            if (clearBtn) clearBtn.hidden = false;
+            if (uploadPrompt) uploadPrompt.hidden = true;
         };
         reader.readAsDataURL(file);
     }
 
-    document.getElementById('run-inference-btn').addEventListener('click', async () => {
-        if (!currentFile) {
-            alert("Please select an image first.");
-            return;
-        }
-
-        tagsResult.innerHTML = '<span class="placeholder">Processing...</span>';
-
-        // Convert to base64
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const base64Img = e.target.result; // includes data:image/...;base64,
-
-            const selectedModel = consoleSelect.value;
-            const protocol = document.getElementById('console-protocol-select').value;
-            const promptVal = document.getElementById('console-prompt-input').value || "Describe this image";
-
-            let url = '/v1/chat/completions';
-            let payload = {};
-
-            if (protocol === 'openai') {
-                payload = {
-                    model: selectedModel,
-                    messages: [
-                        {
-                            role: "user",
-                            content: [
-                                { type: "text", text: promptVal },
-                                { type: "image_url", image_url: { url: base64Img } }
-                            ]
-                        }
-                    ]
-                };
-            } else if (protocol === 'ollama') {
-                // Ollama Generate API expects raw base64 without header usually, but let's see. 
-                // Our server implementation uses decode_base64_image which handles data: uri or raw.
-                // Standard Ollama expects raw base64. 
-                // Let's strip the header just in case our backend handles it (it does).
-                const base64Raw = base64Img.split(',')[1];
-
-                url = '/api/generate';
-                payload = {
-                    model: selectedModel,
-                    prompt: promptVal,
-                    images: [base64Raw],
-                    stream: false
-                };
+    const runBtn = document.getElementById('run-inference-btn');
+    if (runBtn) {
+        runBtn.addEventListener('click', async () => {
+            if (!currentFile) {
+                alert("Please select or paste an image first.");
+                return;
             }
 
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+            tagsResult.innerHTML = '<span class="placeholder">Processing...</span>';
+            tagsResult.classList.remove('empty-state');
 
-                const data = await res.json();
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64Img = e.target.result;
 
-                let tags = [];
+                const selectedModel = consoleSelect ? consoleSelect.value : (Object.keys(state.models)[0] || 'joytag');
+                const protocolSelect = document.getElementById('console-protocol-select');
+                const protocol = protocolSelect ? protocolSelect.value : 'internal';
+
+                const promptVal = document.getElementById('console-prompt-input')?.value || "Describe this image";
+                let currentThreshold = 0.2;
+                if (thresholdSlider) currentThreshold = parseFloat(thresholdSlider.value);
+                if (isNaN(currentThreshold)) currentThreshold = 0.2;
+
+                let charThreshold = 0.2;
+                if (charThresholdSlider) charThreshold = parseFloat(charThresholdSlider.value);
+                if (isNaN(charThreshold)) charThreshold = 0.2;
+
+                let url = '';
+                let payload = {};
+
                 if (protocol === 'openai') {
-                    if (data.choices && data.choices[0].message.content) {
-                        tags = data.choices[0].message.content.split(', ');
-                    }
+                    url = '/v1/chat/completions';
+                    payload = {
+                        model: selectedModel,
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    { type: "text", text: promptVal },
+                                    { type: "image_url", image_url: { url: base64Img } }
+                                ]
+                            }
+                        ]
+                    };
                 } else if (protocol === 'ollama') {
-                    if (data.response) {
-                        tags = data.response.split(', ');
-                    }
+                    const base64Raw = base64Img.split(',')[1];
+                    url = '/api/generate';
+                    payload = {
+                        model: selectedModel,
+                        prompt: promptVal,
+                        images: [base64Raw],
+                        stream: false
+                    };
+                } else if (protocol === 'internal') {
+                    url = '/api/interrogate';
+                    payload = {
+                        model: selectedModel,
+                        image: base64Img,
+                        threshold: currentThreshold,
+                        character_threshold: charThreshold
+                    };
+                    console.log("Sending payload:", payload);
                 }
 
-                if (tags.length > 0) {
-                    renderTags(tags);
-                } else {
-                    tagsResult.innerHTML = '<span class="placeholder">No tags found or error.</span>';
+                try {
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        throw new Error(data.detail || data.error || 'Request failed');
+                    }
+
+                    let tags = [];
+
+                    if (protocol === 'openai') {
+                        if (data.choices && data.choices[0].message.content) {
+                            tags = data.choices[0].message.content.split(', ').map(t => ({ name: t, score: null }));
+                        }
+                    } else if (protocol === 'ollama') {
+                        if (data.response) {
+                            tags = data.response.split(', ').map(t => ({ name: t, score: null }));
+                        }
+                    } else if (protocol === 'internal') {
+                        if (data.tags) {
+                            tags = data.tags;
+                        }
+                    }
+
+                    if (tagCountSpan) tagCountSpan.innerText = tags.length;
+
+                    if (tags.length > 0) {
+                        renderTags(tags);
+                    } else {
+                        tagsResult.innerHTML = '<span class="placeholder">No tags found.</span>';
+                    }
+                } catch (err) {
+                    console.error(err);
+                    let msg = 'Error running inference.';
+                    if (err.message) msg += ` (${err.message})`;
+                    tagsResult.innerHTML = `<span class="placeholder" style="color: red">${msg}</span>`;
                 }
-            } catch (err) {
-                console.error(err);
-                tagsResult.innerHTML = '<span class="placeholder" style="color: red">Error running inference.</span>';
-            }
-        };
-        reader.readAsDataURL(currentFile);
-    });
+            };
+            reader.readAsDataURL(currentFile);
+        });
+    }
 
     function renderTags(tags) {
+        if (!tagsResult) return;
         tagsResult.innerHTML = '';
-        tags.forEach(tag => {
+
+        const tagNames = tags.map(t => t.name).join(', ');
+        const hiddenArea = document.getElementById('hidden-copy-area');
+        if (hiddenArea) hiddenArea.value = tagNames;
+
+        tags.forEach(tagObj => {
             const chip = document.createElement('span');
             chip.className = 'tag-chip';
-            chip.innerText = tag;
+
+            if (tagObj.score !== null) {
+                chip.innerHTML = `${tagObj.name} <span class="score-badge">(${tagObj.score.toFixed(2)})</span>`;
+
+                const score = tagObj.score;
+                chip.title = `Confidence: ${(score * 100).toFixed(1)}%`;
+
+                let hue = Math.max(0, Math.min(120, (score - 0.2) / 0.8 * 120));
+                chip.style.backgroundColor = `hsla(${hue}, 70%, 25%, 0.4)`;
+                chip.style.color = `hsl(${hue}, 80%, 70%)`;
+                chip.style.borderColor = `hsla(${hue}, 70%, 40%, 0.5)`;
+                chip.style.borderWidth = '1px';
+                chip.style.borderStyle = 'solid';
+            } else {
+                chip.innerText = tagObj.name;
+            }
+
             tagsResult.appendChild(chip);
         });
     }
 
-    // Init
+    const copyBtn = document.getElementById('copy-tags-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            const textArea = document.getElementById('hidden-copy-area');
+            const text = textArea ? textArea.value : '';
+            if (!text) return;
+
+            const copyToClipboard = async () => {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (err) {
+                    console.warn('Clipboard API failed, trying fallback:', err);
+                    if (textArea) {
+                        textArea.select();
+                        textArea.setSelectionRange(0, 99999);
+                        try {
+                            const successful = document.execCommand('copy');
+                            if (!successful) throw new Error('execCommand returned false');
+                            return true;
+                        } catch (err) {
+                            console.error('Fallback copy failed:', err);
+                            return false;
+                        }
+                    }
+                    return false;
+                }
+            };
+
+            copyToClipboard().then((success) => {
+                if (success) {
+                    const originalIcon = copyBtn.innerHTML;
+                    copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalIcon;
+                    }, 1500);
+                } else {
+                    alert('Failed to copy tags. Please copy manually.');
+                }
+            });
+        });
+    }
+
     fetchConfig();
 });

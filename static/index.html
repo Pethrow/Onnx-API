@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Onnx API</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -18,7 +18,37 @@
                 <h1>Onnx<span>API</span></h1>
             </div>
 
-            <!-- Navigation removed for single-page layout -->
+            <!-- Tab Navigation -->
+            <div class="floating-tabs">
+                <button class="nav-btn active" data-tab="dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Dashboard
+                </button>
+                <button class="nav-btn" data-tab="settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                    API Settings
+                </button>
+                <button class="nav-btn" data-tab="console">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 17 10 11 4 5"></polyline>
+                        <line x1="12" y1="19" x2="20" y2="19"></line>
+                    </svg>
+                    Test Console
+                </button>
+            </div>
             <div class="controls-area">
                 <button class="icon-btn" id="theme-toggle" title="Switch Theme">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -49,7 +79,7 @@
             <!-- Settings Tab -->
             <section id="settings" class="tab-content">
                 <header>
-                    <h2>Settings</h2>
+                    <h2>API Settings</h2>
                     <p>Configure model parameters in real-time.</p>
                 </header>
                 <div class="settings-container" id="settings-forms">
@@ -59,44 +89,106 @@
 
             <!-- Test Console Tab -->
             <section id="console" class="tab-content">
-                <header>
-                    <h2>Test Console</h2>
-                    <p>Run inference on images to verify tags.</p>
-                </header>
-                <div class="console-layout">
-                    <div class="input-area">
-                        <div class="drop-zone" id="drop-zone">
-                            <p>Drag & Drop Image or Click to Upload</p>
+                <div class="tagger-layout">
+                    <!-- Left Column: Image Input -->
+                    <div class="input-panel">
+                        <div class="drop-zone" id="drop-zone" tabindex="0">
+                            <div id="upload-prompt">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"
+                                    stroke-linejoin="round" class="upload-icon">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                                <p>Drag & Drop, Click, or <strong>Paste</strong> Image</p>
+                            </div>
+                            <img id="image-preview" src="" alt="Preview" hidden>
+                            <button id="clear-image-btn" class="icon-btn remove-btn" hidden title="Remove Image">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
                             <input type="file" id="file-input" accept="image/*" hidden>
                         </div>
-                        <div class="input-group">
-                            <label>Model</label>
-                            <select id="console-model-select">
-                                <!-- Options injected by JS -->
-                            </select>
+                        <div class="input-actions center-row">
+                            <span class="hint-text">Supported: JPG, PNG, WEBP</span>
                         </div>
-                        <div class="input-group">
-                            <label>Protocol</label>
-                            <select id="console-protocol-select">
-                                <option value="openai">OpenAI (Chat)</option>
-                                <option value="ollama">Ollama (Generate)</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Prompt (Optional)</label>
-                            <input type="text" id="console-prompt-input" placeholder="Describe this image"
-                                value="Describe this image">
-                        </div>
-                        <button id="run-inference-btn" class="primary-btn">Run Inference</button>
                     </div>
-                    <div class="output-area">
-                        <div class="preview-container">
-                            <img id="image-preview" src="" alt="Preview" hidden>
+
+                    <!-- Right Column: Controls & Output -->
+                    <div class="controls-panel">
+                        <div class="panel-header">
+                            <h2>Tagger</h2>
                         </div>
-                        <div class="tags-output">
-                            <h3>Tags</h3>
-                            <div id="tags-result" class="tags-cloud">
-                                <span class="placeholder">Run inference to see tags...</span>
+
+                        <div class="control-group">
+                            <label>Model</label>
+                            <select id="console-model-select" class="full-width-select"></select>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="label-row">
+                                <label>Confidence Threshold</label>
+                                <span id="threshold-val-display" class="value-badge">0.20</span>
+                            </div>
+                            <input type="range" id="threshold-slider" min="0.0" max="1.0" step="0.01" value="0.2">
+                        </div>
+
+                        <div class="control-group">
+                            <div class="label-row">
+                                <label>Character Threshold</label>
+                                <span id="char-threshold-val-display" class="value-badge">0.20</span>
+                            </div>
+                            <input type="range" id="char-threshold-slider" min="0.0" max="1.0" step="0.01" value="0.2">
+                        </div>
+
+                        <div class="control-group collapsed-options">
+                            <details>
+                                <summary>Advanced Options</summary>
+                                <div class="advanced-grid">
+                                    <label>Protocol</label>
+                                    <select id="console-protocol-select">
+                                        <option value="internal" selected>Internal (Full Features)</option>
+                                        <option value="openai">OpenAI (Compatibility)</option>
+                                        <option value="ollama">Ollama (Compatibility)</option>
+                                    </select>
+                                    <label>Prompt</label>
+                                    <input type="text" id="console-prompt-input" value="Describe this image"
+                                        placeholder="Prompt for Ollama/OpenAI">
+                                </div>
+                            </details>
+                        </div>
+
+                        <button id="run-inference-btn" class="primary-btn large-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                            Interrogate
+                        </button>
+
+                        <div class="output-section">
+                            <div class="tags-header">
+                                <h3>Results (<span id="tag-count">0</span>)</h3>
+                                <div class="tags-actions">
+                                    <button id="copy-tags-btn" class="icon-btn small" title="Copy as CSV">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="hidden-copy-area" style="position: absolute; left: -9999px;"></textarea>
+                            <div id="tags-result" class="tags-cloud empty-state">
+                                <span>Tags will appear here...</span>
                             </div>
                         </div>
                     </div>
@@ -104,7 +196,7 @@
             </section>
         </main>
     </div>
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
 </body>
 
 </html>

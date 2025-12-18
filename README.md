@@ -6,7 +6,7 @@ A standardized inference server for image interrogation/tagging using **JoyTag**
 - **Models Supported**:
     - `joytag` (Alpha CLIP based, great for booru tags)
     - `wd-eva02-large-tagger-v3` (SmilingWolf ONNX)
-    - `wd-convnext-tagger-v3` (SmilingWolf ONNX)
+    - `wd-vit-large-tagger-v3` (SmilingWolf ONNX)
 - **Protocols**:
     - **OpenAI Vision**: `/v1/chat/completions` (Compatible with SwarmUI MagicPromptExtension)
     - **Ollama**: `/api/generate`, `/api/chat` (Drop-in replacement for Ollama vision)
@@ -48,7 +48,7 @@ Open `http://127.0.0.1:5000` in your browser.
 | :--- | :--- | :--- |
 | `joytag` | PyTorch | Balanced, good for general captioning. |
 | `wd-eva02-large-tagger-v3` | ONNX | High accuracy for Danbooru tags. |
-| `wd-convnext-tagger-v3` | ONNX | Faster, good alternative. |
+| `wd-vit-large-tagger-v3` | ONNX | Vision Transformer based. |
 
 ## Credits
 - **JoyTag**: `fancyfeast`

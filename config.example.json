@@ -2,7 +2,7 @@
     "joytag": {
         "threshold": 0.3
     },
-    "wd-convnext-tagger-v3": {
+    "wd-vit-large-tagger-v3": {
         "threshold": 0.35,
         "character_threshold": 0.2
     },
