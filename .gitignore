@@ -6,14 +6,22 @@ venv/
 .env
 config.json
 
-# Models
+# Large Model Files (across any directory)
 *.onnx
 *.safetensors
 *.msgpack
 *.bin
 *.pth
 *.tflite
+*.csv
+*.txt
 
-# Model Directories
+# Specific Model Storage Directories
 models/
 model_sw/
+model/.cache/
+
+# Keep JoyTag source but ignore downloaded weights
+# (Already covered by global *.onnx etc, but being explicit)
+model/*.onnx
+model/*.safetensors
